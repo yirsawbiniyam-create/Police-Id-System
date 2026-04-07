@@ -7,171 +7,172 @@
 
 <style>
 body { font-family: Arial; background:#eef2f7; }
-.container { max-width:1000px; margin:auto; background:#fff; padding:25px; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.1);} 
+.container { max-width:1000px; margin:auto; background:#fff; padding:20px; border-radius:12px; }
 h2 { text-align:center; }
-
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-input { width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; }
-button { padding:12px; background:#004aad; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-button:hover { background:#003080; }
+input { width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; }
+label { font-weight:bold; }
+button { padding:10px; background:#0b5ed7; color:white; border:none; border-radius:6px; cursor:pointer; margin-right:10px; }
 
-.card { width:360px; height:220px; border-radius:12px; padding:10px; margin-top:20px; position:relative; box-shadow:0 0 8px rgba(0,0,0,0.2); overflow:hidden; }
+.print-area { display:flex; gap:20px; flex-wrap:wrap; }
+
+.card { width:350px; height:220px; border-radius:12px; padding:10px; position:relative; box-shadow:0 0 10px rgba(0,0,0,0.2); overflow:hidden; }
 .front { background: linear-gradient(gold, skyblue); }
 .back { background:#fff; }
 
-.card h4, .card p { color:#000; font-weight:bold; margin:2px 0; font-size:12px; }
+.emblem { position:absolute; top:5px; height:45px; }
+.left { left:5px; }
+.center { left:50%; transform:translateX(-50%); }
+.right { right:5px; }
 
-.emblem { position:absolute; top:5px; width:60px; height:40px; object-fit:cover; }
-.left-emblem { left:5px; }
-.right-emblem { right:5px; }
-.center-logo { position:absolute; top:5px; left:50%; transform:translateX(-50%); width:50px; height:50px; }
+.photo { position:absolute; right:10px; top:70px; width:80px; height:90px; object-fit:cover; border-radius:6px; }
+.text { font-size:12px; font-weight:bold; color:black; }
 
-.photo { position:absolute; top:80px; right:10px; width:80px; height:90px; object-fit:cover; border-radius:5px; border:2px solid #000; }
+.watermark { position:absolute; opacity:0.1; width:150px; top:40px; left:100px; }
 
-.watermark { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); opacity:0.1; width:150px; }
+.qr-big { position:absolute; bottom:10px; left:10px; }
 
-.section-title { text-align:center; font-size:14px; margin-top:60px; }
+@media print {
+  body * { visibility:hidden; }
+  #printSection, #printSection * { visibility:visible; }
+  #printSection { position:absolute; top:0; left:0; }
+}
 </style>
 </head>
 <body>
+
 <div class="container">
-<h2>Police ID Registration / የፖሊስ መታወቂያ መመዝገቢያ</h2>
+<h2>BGRP Police ID System</h2>
 
 <div class="form-grid">
-<input id="name" placeholder="ሙሉ ስም / Full Name">
-<input id="rank" placeholder="ማዕረግ / Rank">
-<input id="role" placeholder="ሀላፊነት / Responsibility">
-<input id="phone" placeholder="ስልክ / Phone">
-<input id="blood" placeholder="የደም አይነት / Blood Type">
-
-<input id="age" placeholder="ዕድሜ / Age">
-<input id="gender" placeholder="ፆታ / Gender">
-<input id="height" placeholder="ቁመት / Height">
-<input id="color" placeholder="ቀለም / Color">
-<input id="emergencyName" placeholder="የአደጋ ጊዜ ተጠሪ / Emergency Name">
+<input id="nameAmh" placeholder="ሙሉ ስም">
+<input id="nameEng" placeholder="Full Name">
+<input id="rank" placeholder="Rank">
+<input id="role" placeholder="Responsibility">
+<input id="phone" placeholder="Phone">
+<input id="blood" placeholder="Blood Type">
+<input id="age" placeholder="Age">
+<input id="sex" placeholder="Sex">
+<input id="height" placeholder="Height">
+<input id="emergencyName" placeholder="Emergency Name">
 <input id="emergencyPhone" placeholder="Emergency Phone">
 
-<label>የባለመታወቂያ ፎቶ / ID Photo Upload</label>
-<input id="photo" type="file" accept="image/*">
-
-<label>የፖሊስ ሎጎ / Police Logo Upload</label>
-<input id="logo" type="file" accept="image/*">
-
-<label>የክልል ሰንደቅ አላማ (ግራ) / Left Flag Upload</label>
-<input id="flagLeft" type="file" accept="image/*">
-
-<label>የክልል ሰንደቅ አላማ (ቀኝ) / Right Flag Upload</label>
-<input id="flagRight" type="file" accept="image/*">
-
-<label>የኮሚሽነር ፊርማ / Commissioner Signature Upload</label>
-<input id="signature" type="file" accept="image/*">
+<input type="file" id="photo">
+<input type="file" id="flagLeft">
+<input type="file" id="flagRight">
+<input type="file" id="logo">
+<input type="file" id="signature">
 </div>
 
-<button id="generateBtn">Generate ID</button>
+<br>
+<button onclick="generateID()">Generate ID</button>
+<button onclick="printID()">Print ID</button>
 
-<h3>Front</h3>
-<div id="cardFront" class="card front"></div>
-
-<h3>Back</h3>
-<div id="cardBack" class="card back"></div>
+<div id="printSection" class="print-area">
+  <div id="cardFront" class="card front"></div>
+  <div id="cardBack" class="card back"></div>
+</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-<script>
-let localCount = 0;
+<!-- Firebase Modular SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-function readImage(input){
-  return new Promise(resolve=>{
-    if(!input.files[0]) return resolve('');
-    const reader = new FileReader();
-    reader.onload = e=>resolve(e.target.result);
-    reader.readAsDataURL(input.files[0]);
-  });
+const firebaseConfig = {
+  apiKey: "AIzaSyD8fM9O2V5xvxAqbgekHIyilkkfaWNE9dA",
+  authDomain: "police-id-system.firebaseapp.com",
+  projectId: "police-id-system",
+  storageBucket: "police-id-system.appspot.com",
+  messagingSenderId: "229965084194",
+  appId: "1:229965084194:web:fb2ea97d4a5a9d2bd2bc7b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.saveToFirebase = async function(data){
+  try {
+    await addDoc(collection(db, "ids"), data);
+    console.log("Saved to Firebase");
+  } catch(e){
+    console.error("Firebase Error:", e);
+  }
 }
-
-async function generateID(){
-  localCount++;
-  const idNumber = 'BGRP-' + String(localCount).padStart(4,'0');
-
-  const name = nameEl.value;
-  const rank = rankEl.value;
-  const role = roleEl.value;
-  const phone = phoneEl.value;
-  const blood = bloodEl.value;
-
-  const age = ageEl.value;
-  const gender = genderEl.value;
-  const height = heightEl.value;
-  const color = colorEl.value;
-  const emergencyName = emergencyNameEl.value;
-  const emergencyPhone = emergencyPhoneEl.value;
-
-  const photo = await readImage(photoEl);
-  const logo = await readImage(logoEl);
-  const flagLeft = await readImage(flagLeftEl);
-  const flagRight = await readImage(flagRightEl);
-  const signature = await readImage(signatureEl);
-
-  document.getElementById('cardFront').innerHTML = `
-    ${flagLeft ? `<img src="${flagLeft}" class="emblem left-emblem">` : ''}
-    ${flagRight ? `<img src="${flagRight}" class="emblem right-emblem">` : ''}
-    ${logo ? `<img src="${logo}" class="center-logo">` : ''}
-
-    <div class="section-title">ቤንሻንጉል ጉሙዝ ፖሊስ<br>BGRP Police</div>
-
-    <h4>${idNumber}</h4>
-    <p>${name}</p>
-    <p>${rank}</p>
-    <p>${role}</p>
-    <p>${phone}</p>
-    <p>${blood}</p>
-
-    ${photo ? `<img src="${photo}" class="photo">` : ''}
-  `;
-
-  document.getElementById('cardBack').innerHTML = `
-    ${logo ? `<img src="${logo}" class="watermark">` : ''}
-
-    <p style="color:black;font-weight:bold;">
-    ይህን መታወቂያ የያዘ የቤንሻንጉል ጉሙዝ ፖሊስ አባል ነው፤ ህግን የማስከበር ስልጣን ተሰጥቶታል።<br>
-    This ID belongs to BGRP Police member.
-    </p>
-
-    <p>${age} / ${gender} / ${height} / ${color}</p>
-    <p>${emergencyName} - ${emergencyPhone}</p>
-
-    <div id="qrcode"></div>
-    ${signature ? `<img src="${signature}" style="width:100px;position:absolute;bottom:10px;right:10px;">` : '<p>Commissioner Signature</p>'}
-  `;
-
-  new QRCode(document.getElementById('qrcode'), {
-    text: idNumber + ' | ' + nameAmh + ' | ' + rank,
-    width:80,
-    height:80
-  });
-}
-
-const nameEl = document.getElementById('name');
-const rankEl = document.getElementById('rank');
-const roleEl = document.getElementById('role');
-const phoneEl = document.getElementById('phone');
-const bloodEl = document.getElementById('blood');
-
-const ageEl = document.getElementById('age');
-const genderEl = document.getElementById('gender');
-const heightEl = document.getElementById('height');
-const colorEl = document.getElementById('color');
-const emergencyNameEl = document.getElementById('emergencyName');
-const emergencyPhoneEl = document.getElementById('emergencyPhone');
-
-const photoEl = document.getElementById('photo');
-const logoEl = document.getElementById('logo');
-const flagLeftEl = document.getElementById('flagLeft');
-const flagRightEl = document.getElementById('flagRight');
-const signatureEl = document.getElementById('signature');
-
-document.getElementById('generateBtn').addEventListener('click', generateID);
 </script>
+
+<script>
+let counter = 0;
+
+function readFile(input, callback){
+  if(input.files && input.files[0]){
+    const reader = new FileReader();
+    reader.onload = e => callback(e.target.result);
+    reader.readAsDataURL(input.files[0]);
+  } else callback('');
+}
+
+function generateID(){
+  counter++;
+  const id = 'BGRP-' + String(counter).padStart(4,'0');
+
+  const data = {
+    id,
+    nameAmh: nameAmh.value,
+    nameEng: nameEng.value,
+    rank: rank.value,
+    role: role.value
+  };
+
+  const qrText = JSON.stringify(data);
+
+  readFile(photo, photoSrc => {
+  readFile(flagLeft, leftFlag => {
+  readFile(flagRight, rightFlag => {
+  readFile(logo, logoSrc => {
+  readFile(signature, signSrc => {
+
+    cardFront.innerHTML = `
+      <img src='${leftFlag}' class='emblem left'>
+      <img src='${logoSrc}' class='emblem center'>
+      <img src='${rightFlag}' class='emblem right'>
+      <img src='${photoSrc}' class='photo'>
+      <div class='text'>${id}</div>
+      <div class='text'>${nameAmh.value}</div>
+      <div class='text'>${nameEng.value}</div>
+      <div class='text'>${rank.value}</div>
+      <div class='text'>${role.value}</div>
+      <div class='text'>${phone.value}</div>
+      <div class='text'>${blood.value}</div>
+    `;
+
+    cardBack.innerHTML = `
+      <img src='${logoSrc}' class='watermark'>
+      <div class='text'>ማሳሰቢያ: ይህ መታወቂያ የBGRP ፖሊስ አባል ነው</div>
+      <div class='text'>Notice: This ID belongs to BGRP Police</div>
+      <div class='text'>Age:${age.value} Sex:${sex.value}</div>
+      <div class='text'>Height:${height.value}</div>
+      <div class='text'>Emergency:${emergencyName.value}</div>
+      <div class='text'>Phone:${emergencyPhone.value}</div>
+      <div id='qr' class='qr-big'></div>
+      <img src='${signSrc}' style='width:80px; position:absolute; bottom:10px; right:10px;'>
+    `;
+
+    new QRCode(document.getElementById('qr'), {
+      text: qrText,
+      width:90,
+      height:90
+    });
+
+  });});});});});
+}
+
+function printID(){
+  window.print();
+}
+</script>
+
 </body>
 </html>
