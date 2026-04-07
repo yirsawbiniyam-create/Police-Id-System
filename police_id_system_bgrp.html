@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BGRP Police ID System</title>
+
+<style>
+body { font-family: Arial; background:#eef2f7; }
+.container { max-width:1000px; margin:auto; background:#fff; padding:25px; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.1);} 
+h2 { text-align:center; }
+
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+input { width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; }
+button { padding:12px; background:#004aad; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+button:hover { background:#003080; }
+
+.card { width:360px; height:220px; border-radius:12px; padding:10px; margin-top:20px; position:relative; box-shadow:0 0 8px rgba(0,0,0,0.2); overflow:hidden; }
+.front { background: linear-gradient(gold, skyblue); }
+.back { background:#fff; }
+
+.card h4, .card p { color:#000; font-weight:bold; margin:2px 0; font-size:12px; }
+
+.emblem { position:absolute; top:5px; width:60px; height:40px; object-fit:cover; }
+.left-emblem { left:5px; }
+.right-emblem { right:5px; }
+.center-logo { position:absolute; top:5px; left:50%; transform:translateX(-50%); width:50px; height:50px; }
+
+.photo { position:absolute; top:80px; right:10px; width:80px; height:90px; object-fit:cover; border-radius:5px; border:2px solid #000; }
+
+.watermark { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); opacity:0.1; width:150px; }
+
+.section-title { text-align:center; font-size:14px; margin-top:60px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Police ID Registration / የፖሊስ መታወቂያ መመዝገቢያ</h2>
+
+<div class="form-grid">
+<input id="name" placeholder="ሙሉ ስም / Full Name">
+<input id="rank" placeholder="ማዕረግ / Rank">
+<input id="role" placeholder="ሀላፊነት / Responsibility">
+<input id="phone" placeholder="ስልክ / Phone">
+<input id="blood" placeholder="የደም አይነት / Blood Type">
+
+<input id="age" placeholder="ዕድሜ / Age">
+<input id="gender" placeholder="ፆታ / Gender">
+<input id="height" placeholder="ቁመት / Height">
+<input id="color" placeholder="ቀለም / Color">
+<input id="emergencyName" placeholder="የአደጋ ጊዜ ተጠሪ / Emergency Name">
+<input id="emergencyPhone" placeholder="Emergency Phone">
+
+<label>የባለመታወቂያ ፎቶ / ID Photo Upload</label>
+<input id="photo" type="file" accept="image/*">
+
+<label>የፖሊስ ሎጎ / Police Logo Upload</label>
+<input id="logo" type="file" accept="image/*">
+
+<label>የክልል ሰንደቅ አላማ (ግራ) / Left Flag Upload</label>
+<input id="flagLeft" type="file" accept="image/*">
+
+<label>የክልል ሰንደቅ አላማ (ቀኝ) / Right Flag Upload</label>
+<input id="flagRight" type="file" accept="image/*">
+
+<label>የኮሚሽነር ፊርማ / Commissioner Signature Upload</label>
+<input id="signature" type="file" accept="image/*">
+</div>
+
+<button id="generateBtn">Generate ID</button>
+
+<h3>Front</h3>
+<div id="cardFront" class="card front"></div>
+
+<h3>Back</h3>
+<div id="cardBack" class="card back"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+let localCount = 0;
+
+function readImage(input){
+  return new Promise(resolve=>{
+    if(!input.files[0]) return resolve('');
+    const reader = new FileReader();
+    reader.onload = e=>resolve(e.target.result);
+    reader.readAsDataURL(input.files[0]);
+  });
+}
+
+async function generateID(){
+  localCount++;
+  const idNumber = 'BGRP-' + String(localCount).padStart(4,'0');
+
+  const name = nameEl.value;
+  const rank = rankEl.value;
+  const role = roleEl.value;
+  const phone = phoneEl.value;
+  const blood = bloodEl.value;
+
+  const age = ageEl.value;
+  const gender = genderEl.value;
+  const height = heightEl.value;
+  const color = colorEl.value;
+  const emergencyName = emergencyNameEl.value;
+  const emergencyPhone = emergencyPhoneEl.value;
+
+  const photo = await readImage(photoEl);
+  const logo = await readImage(logoEl);
+  const flagLeft = await readImage(flagLeftEl);
+  const flagRight = await readImage(flagRightEl);
+  const signature = await readImage(signatureEl);
+
+  document.getElementById('cardFront').innerHTML = `
+    ${flagLeft ? `<img src="${flagLeft}" class="emblem left-emblem">` : ''}
+    ${flagRight ? `<img src="${flagRight}" class="emblem right-emblem">` : ''}
+    ${logo ? `<img src="${logo}" class="center-logo">` : ''}
+
+    <div class="section-title">ቤንሻንጉል ጉሙዝ ፖሊስ<br>BGRP Police</div>
+
+    <h4>${idNumber}</h4>
+    <p>${name}</p>
+    <p>${rank}</p>
+    <p>${role}</p>
+    <p>${phone}</p>
+    <p>${blood}</p>
+
+    ${photo ? `<img src="${photo}" class="photo">` : ''}
+  `;
+
+  document.getElementById('cardBack').innerHTML = `
+    ${logo ? `<img src="${logo}" class="watermark">` : ''}
+
+    <p style="color:black;font-weight:bold;">
+    ይህን መታወቂያ የያዘ የቤንሻንጉል ጉሙዝ ፖሊስ አባል ነው፤ ህግን የማስከበር ስልጣን ተሰጥቶታል።<br>
+    This ID belongs to BGRP Police member.
+    </p>
+
+    <p>${age} / ${gender} / ${height} / ${color}</p>
+    <p>${emergencyName} - ${emergencyPhone}</p>
+
+    <div id="qrcode"></div>
+    ${signature ? `<img src="${signature}" style="width:100px;position:absolute;bottom:10px;right:10px;">` : '<p>Commissioner Signature</p>'}
+  `;
+
+  new QRCode(document.getElementById('qrcode'), {
+    text: idNumber + ' | ' + nameAmh + ' | ' + rank,
+    width:80,
+    height:80
+  });
+}
+
+const nameEl = document.getElementById('name');
+const rankEl = document.getElementById('rank');
+const roleEl = document.getElementById('role');
+const phoneEl = document.getElementById('phone');
+const bloodEl = document.getElementById('blood');
+
+const ageEl = document.getElementById('age');
+const genderEl = document.getElementById('gender');
+const heightEl = document.getElementById('height');
+const colorEl = document.getElementById('color');
+const emergencyNameEl = document.getElementById('emergencyName');
+const emergencyPhoneEl = document.getElementById('emergencyPhone');
+
+const photoEl = document.getElementById('photo');
+const logoEl = document.getElementById('logo');
+const flagLeftEl = document.getElementById('flagLeft');
+const flagRightEl = document.getElementById('flagRight');
+const signatureEl = document.getElementById('signature');
+
+document.getElementById('generateBtn').addEventListener('click', generateID);
+</script>
+</body>
+</html>
